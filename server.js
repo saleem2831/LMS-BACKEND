@@ -16,7 +16,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
 // const allowedOrigins = [
@@ -24,16 +24,37 @@ app.use(express.json());
 //   "https://lms-frontend-rho-nine.vercel.app/" // replace with your real Vercel URL
 // ];
 
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       // allow requests with no origin (like Postman)
+//       if (!origin) return callback(null, true);
+
+//       if (allowedOrigins.includes(origin)) {
+//         return callback(null, true);
+//       } else {
+//         return callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
+
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://lms-frontend-rho-nine.vercel.app/"
+];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like Postman)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
+        callback(null, true);
       } else {
-        return callback(new Error("Not allowed by CORS"));
+        callback(new Error("CORS not allowed"));
       }
     },
     credentials: true,
