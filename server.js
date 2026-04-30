@@ -43,23 +43,25 @@ app.use(express.json());
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://lms-frontend-rho-nine.vercel.app/"
+  "https://lms-frontend-rho-nine.vercel.app"
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // allow Postman / server-to-server requests
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
+        return callback(null, true);
       } else {
-        callback(new Error("CORS not allowed"));
+        return callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
   })
 );
+
 
 // Static folder for uploads
 app.use("/uploads", express.static("uploads"));
