@@ -19,10 +19,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const allowedOrigins = [
-  "http://localhost:5173", // local Vite frontend
-  "https://lms-frontend-rho-nine.vercel.app/" // replace with your real Vercel URL
-];
+// const allowedOrigins = [
+//   "http://localhost:5173", // local Vite frontend
+//   "https://lms-frontend-rho-nine.vercel.app/" // replace with your real Vercel URL
+// ];
 
 app.use(
   cors({
