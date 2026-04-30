@@ -1,0 +1,11 @@
+node_modules/
+.env
+logs/
+*.log
+uploads/
+tmp/
+dist/
+build/
+coverage/
+.pids
+*.pid
