@@ -16,8 +16,9 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 
-// app.use(cors());
+app.use(cors());
 app.use(express.json());
+
 
 // const allowedOrigins = [
 //   "http://localhost:5173", // local Vite frontend
@@ -41,26 +42,17 @@ app.use(express.json());
 // );
 
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://lms-frontend-rho-nine.vercel.app"
-];
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://lms-frontend-rho-nine.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow Postman / server-to-server requests
-      if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+app.options("*", cors());
 
 
 // Static folder for uploads
