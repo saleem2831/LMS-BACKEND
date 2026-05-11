@@ -2,6 +2,11 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+import { sendEmail } from "../utils/sendEmail.js";
+import { loginTemplate } from "../email-templates/loginTemplate.js";
+import { registerTemplate } from "../email-templates/registerTemplate.js";
+
+
 // Generate token
 const generateToken = (user) => {
   return jwt.sign(
@@ -31,6 +36,14 @@ export const register = async (req, res) => {
 
     });
 
+       // ✅ Send Welcome Email
+    // await sendEmail(
+    //   email,
+    //   "Welcome to Skillstek 🎉",
+    //   registerTemplate(name)
+    // );
+
+
     res.json({
       token: generateToken(user),
       user
@@ -55,6 +68,13 @@ export const login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
+
+      // ✅ Send Login Alert Email
+    // await sendEmail(
+    //   user.email,
+    //   "New Login Alert 🔐",
+    //   loginTemplate(user.name, user.email)
+    // );
 
     res.json({
       token: generateToken(user),

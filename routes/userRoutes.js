@@ -3,7 +3,10 @@ import User from "../models/User.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 import crypto from "crypto";
 import Enrollment from "../models/Enrollment.js";
+import bcrypt from "bcryptjs";
 import Course from "../models/Course.js";        // ✅ ADD THIS
+// import User from "../models/User.js";
+
 
 
 
@@ -20,6 +23,29 @@ router.get("/students", protect, authorize("ADMIN"), async (req, res) => {
   }
 });
 
+// router.post(
+//   "/create-instructor",
+//   protect,
+//   authorize("ADMIN"),
+//   async (req, res) => {
+//     try {
+//       const { name, email, password } = req.body;
+
+//       const instructor = await User.create({
+//         name,
+//         email,
+//         password,
+//         role: "INSTRUCTOR"
+//       });
+
+//       res.json(instructor);
+
+//     } catch (error) {
+//       res.status(500).json({ message: error.message });
+//     }
+//   }
+// );
+
 router.post(
   "/create-instructor",
   protect,
@@ -28,10 +54,21 @@ router.post(
     try {
       const { name, email, password } = req.body;
 
+      // ✅ Check if already exists
+      const userExists = await User.findOne({ email });
+      if (userExists) {
+        return res.status(400).json({
+          message: "Instructor already exists"
+        });
+      }
+
+      // ✅ HASH PASSWORD (same as register)
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const instructor = await User.create({
         name,
         email,
-        password,
+        password: hashedPassword,
         role: "INSTRUCTOR"
       });
 
@@ -75,18 +112,18 @@ router.delete("/:id", protect, authorize("ADMIN"), async (req, res) => {
   res.json({ message: "User deleted" });
 });
 
-router.post("/create-instructor", protect, authorize("ADMIN"), async (req, res) => {
-  const { name, email, password } = req.body;
+// router.post("/create-instructor", protect, authorize("ADMIN"), async (req, res) => {
+//   const { name, email, password } = req.body;
 
-  const user = await User.create({
-    name,
-    email,
-    password,
-    role: "INSTRUCTOR"
-  });
+//   const user = await User.create({
+//     name,
+//     email,
+//     password,
+//     role: "INSTRUCTOR"
+//   });
 
-  res.json(user);
-});
+//   res.json(user);
+// });
 
 // GET PROFILE
 router.get("/me", protect, async (req, res) => {
@@ -155,6 +192,139 @@ router.get("/full-data", protect, authorize("ADMIN"), async (req, res) => {
   const enrollments = await Enrollment.find().populate("studentId courseId");
 
   res.json({ users, courses, enrollments });
+});
+
+
+// router.post(
+//   "/create-sales",
+//   protect,
+//   authorize("ADMIN"),
+//   async (req, res) => {
+//     try {
+//       const { name, email, password } = req.body;
+
+//       const exists = await User.findOne({ email });
+
+//       if (exists) {
+//         return res.status(400).json({
+//           message: "Sales user already exists"
+//         });
+//       }
+
+//       const user = await User.create({
+//         name,
+//         email,
+//         password,
+//         role: "SALES"
+//       });
+
+//       res.json(user);
+
+//     } catch (error) {
+//       res.status(500).json({ message: error.message });
+//     }
+//   }
+// );
+
+
+// router.post(
+//   "/create-sales",
+//   protect,
+//   authorize("ADMIN"),
+//   async (req, res) => {
+//     try {
+//       const { name, email, password } = req.body;
+
+//        const exists = await User.findOne({ email });
+
+//       if (exists) {
+//         return res.status(400).json({
+//           message: "Sales user already exists"
+//         });
+//       }
+
+
+//       const sales = await User.create({
+//         name,
+//         email,
+//         password,
+//         role: "SALES"
+//       });
+
+//       res.json(sales);
+
+//     } catch (error) {
+//       res.status(500).json({ message: error.message });
+//     }
+//   }
+// );
+
+
+router.post(
+  "/create-sales",
+  protect,
+  authorize("ADMIN"),
+  async (req, res) => {
+    try {
+
+      const { name, email, password } = req.body;
+
+      const exists = await User.findOne({ email });
+
+      if (exists) {
+        return res.status(400).json({
+          message: "Sales already exists"
+        });
+      }
+
+      // HASH PASSWORD
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const sales = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        role: "SALES"
+      });
+
+      res.json({
+        message: "Sales created"
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        message: error.message
+      });
+    }
+  }
+);
+
+
+router.get(
+  "/instructors",
+  protect,
+  async (req, res) => {
+    const instructors = await User.find({
+      role: "INSTRUCTOR"
+    }).select("name email");
+
+    res.json(instructors);
+  }
+);
+
+
+// GET Instructor Courses
+router.get("/instructor-courses", protect, async (req, res) => {
+  try {
+    const courses = await Course.find({
+  assignedInstructors: req.user._id
+});
+
+
+    res.json(courses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 

@@ -1,7 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-dotenv.config();
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
@@ -10,8 +9,14 @@ import userRoutes from "./routes/userRoutes.js";
 import classRoutes from "./routes/classRoutes.js";
 import enrollmentRoutes from "./routes/enrollmentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import demoRoutes from "./routes/demoRoutes.js";
+import trialRoutes from "./routes/trialRoutes.js";
+import salesRoutes from "./routes/salesRoutes.js";
+import instructorRoutes from "./routes/instructorRoutes.js";
+import availabilityRoutes from "./routes/availabilityRoutes.js";
 
 
+dotenv.config();
 
 
 const app = express();
@@ -52,7 +57,7 @@ app.use(cors({
 }));
 
 
-app.options("*", cors());
+// app.options("*", cors());
 
 
 // Static folder for uploads
@@ -64,6 +69,24 @@ app.use("/api/users", userRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/demos", demoRoutes);
+app.use("/api/trials", trialRoutes);
+app.use(
+  "/api/sales",
+  salesRoutes
+);
+
+
+app.use(
+  "/api/instructor",
+  instructorRoutes
+);
+app.use(
+  "/api/availability",
+  availabilityRoutes
+);
+
+
 
 
 

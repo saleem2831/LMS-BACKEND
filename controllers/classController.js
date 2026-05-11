@@ -94,6 +94,94 @@ export const createBatch = async (req, res) => {
 
 
 
+// export const createClass = async (req, res) => {
+//   try {
+//     const {
+//       type,
+//       courseId,
+//       batchId,
+//       startTime,
+//       endTime,
+//       meetLink,
+//       description,
+//       studentId // only for 1:1
+//     } = req.body;
+
+//     // ✅ 1. VALIDATION
+//     if (!courseId || !startTime || !meetLink) {
+//       return res.status(400).json({
+//         message: "courseId, startTime and meetLink are required"
+//       });
+//     }
+
+//     // ✅ 2. CHECK COURSE EXISTS
+//     const course = await Course.findById(courseId);
+//     if (!course) {
+//       return res.status(404).json({ message: "Course not found" });
+//     }
+
+//     // ✅ 3. CHECK INSTRUCTOR IS ASSIGNED
+//     if (
+//       course.assignedInstructor &&
+//       course.assignedInstructor.toString() !== req.user._id.toString()
+//     ) {
+//       return res.status(403).json({
+//         message: "You are not assigned to this course"
+//       });
+//     }
+
+//     // ✅ 4. HANDLE STUDENTS
+//     let students = [];
+
+//     if (type === "ONE_TO_ONE") {
+//       if (!studentId) {
+//         return res.status(400).json({
+//           message: "studentId required for 1:1 class"
+//         });
+//       }
+
+//       students = [studentId];
+//     } else if (type === "BATCH") {
+//       const enrollments = await Enrollment.find({ courseId });
+//       students = enrollments.map(e => e.studentId);
+//     }
+
+//     // ✅ 5. CREATE CLASS
+//     const newClass = await Class.create({
+//       type,
+//       courseId,
+//       instructorId: req.user._id,
+//       batchId: batchId || null,
+//       students,
+//       startTime,
+//       endTime,
+//       meetLink,
+//       description
+//     });
+
+//     res.json(newClass);
+
+// //     for (let student of students) {
+// //   await Notification.create({
+// //     userId: student,
+// //     message: `New class scheduled for course`
+// //   });
+// // }
+
+// for (let student of students) {
+//   await Notification.create({
+//     userId: student,
+//     message: `Class scheduled at ${new Date(startTime).toLocaleString("en-IN", {
+//       timeZone: "Asia/Kolkata"
+//     })}`
+//   });
+// }
+
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 export const createClass = async (req, res) => {
   try {
     const {
@@ -103,7 +191,8 @@ export const createClass = async (req, res) => {
       startTime,
       endTime,
       meetLink,
-      studentId // only for 1:1
+      description,
+      studentId // only used for 1:1
     } = req.body;
 
     // ✅ 1. VALIDATION
@@ -119,7 +208,7 @@ export const createClass = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // ✅ 3. CHECK INSTRUCTOR IS ASSIGNED
+    // ✅ 3. CHECK INSTRUCTOR ACCESS
     if (
       course.assignedInstructor &&
       course.assignedInstructor.toString() !== req.user._id.toString()
@@ -140,8 +229,17 @@ export const createClass = async (req, res) => {
       }
 
       students = [studentId];
-    } else if (type === "BATCH") {
+    }
+
+    if (type === "BATCH") {
       const enrollments = await Enrollment.find({ courseId });
+
+      if (!enrollments.length) {
+        return res.status(400).json({
+          message: "No students enrolled in this course"
+        });
+      }
+
       students = enrollments.map(e => e.studentId);
     }
 
@@ -151,31 +249,27 @@ export const createClass = async (req, res) => {
       courseId,
       instructorId: req.user._id,
       batchId: batchId || null,
-      students,
+      students, // ✅ correct field
       startTime,
       endTime,
-      meetLink
+      meetLink,
+      description
     });
 
-    res.json(newClass);
+    // ✅ 6. SEND NOTIFICATIONS
+    for (let student of students) {
+      await Notification.create({
+        userId: student,
+        message: `Class scheduled at ${new Date(startTime).toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata"
+        })}`
+      });
+    }
 
-//     for (let student of students) {
-//   await Notification.create({
-//     userId: student,
-//     message: `New class scheduled for course`
-//   });
-// }
-
-for (let student of students) {
-  await Notification.create({
-    userId: student,
-    message: `Class scheduled at ${new Date(startTime).toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata"
-    })}`
-  });
-}
+    res.status(201).json(newClass);
 
   } catch (error) {
+    console.error("Create Class Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -240,19 +334,117 @@ for (let student of students) {
 //   }
 // };
 
+// export const getClasses = async (req, res) => {
+//   try {
+
+// // console.log("NOW:", now);
+// // console.log("TWO HOURS AGO:", twoHoursAgo);
+//     let classes;
+
+//     if (req.user.role === "INSTRUCTOR") {
+//       classes = await Class.find({
+//         instructorId: req.user._id
+//       }).populate("courseId", "title");
+//     }
+
+//     // if (req.user.role === "STUDENT") {
+//     //   const enrollments = await Enrollment.find({
+//     //     studentId: req.user._id
+//     //   });
+
+//     //   const courseIds = enrollments.map(e => e.courseId);
+
+//     //   classes = await Class.find({
+//     //     courseId: { $in: courseIds }
+//     //   }).populate("courseId", "title");
+//     // }
+
+//     if (req.user.role === "STUDENT") {
+
+//   const enrollments =
+//     await Enrollment.find({
+//       studentId:
+//         req.user._id
+//     });
+
+//   const courseIds =
+//     enrollments.map(
+//       (e) => e.courseId
+//     );
+
+//   classes =
+//     await Class.find({
+
+//       $or: [
+
+//         // BATCH CLASSES
+//         {
+//           courseId: {
+//             $in: courseIds
+//           },
+
+//           type: "BATCH"
+//         },
+
+//         // ONE TO ONE CLASSES
+//         {
+//           studentId:
+//             req.user._id,
+
+//           type:
+//             "ONE_TO_ONE"
+//         }
+//       ]
+//     })
+
+//     .populate(
+//       "courseId",
+//       "title"
+//     );
+// }
+
+//     if (req.user.role === "ADMIN") {
+//       classes = await Class.find().populate("courseId", "title");
+//     }
+
+//     // res.json(classes);
+//      // ✅ ADD THIS BLOCK HERE (IMPORTANT)
+//     const updatedClasses = classes.map(c => {
+//       const start = new Date(c.startTime);
+
+//       const endTime = new Date(
+//         start.getTime() + 2 * 60 * 60 * 1000
+//       );
+
+//       const status =
+//         new Date() >= endTime ? "COMPLETED" : "UPCOMING";
+
+//       return {
+//         ...c.toObject(),
+//         status
+//       };
+//     });
+
+//     // ✅ RETURN UPDATED DATA
+//     res.json(updatedClasses);
+
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 export const getClasses = async (req, res) => {
   try {
-
-// console.log("NOW:", now);
-// console.log("TWO HOURS AGO:", twoHoursAgo);
     let classes;
 
+    // ✅ INSTRUCTOR
     if (req.user.role === "INSTRUCTOR") {
       classes = await Class.find({
         instructorId: req.user._id
       }).populate("courseId", "title");
     }
 
+    // ✅ STUDENT (FIXED HERE)
     if (req.user.role === "STUDENT") {
       const enrollments = await Enrollment.find({
         studentId: req.user._id
@@ -261,16 +453,28 @@ export const getClasses = async (req, res) => {
       const courseIds = enrollments.map(e => e.courseId);
 
       classes = await Class.find({
-        courseId: { $in: courseIds }
+        $or: [
+          // ✅ BATCH
+          {
+            courseId: { $in: courseIds },
+            type: "BATCH"
+          },
+
+          // ✅ ONE TO ONE (FIXED)
+          {
+            students: req.user._id, // 🔥 THIS IS THE FIX
+            type: "ONE_TO_ONE"
+          }
+        ]
       }).populate("courseId", "title");
     }
 
+    // ✅ ADMIN
     if (req.user.role === "ADMIN") {
       classes = await Class.find().populate("courseId", "title");
     }
 
-    // res.json(classes);
-     // ✅ ADD THIS BLOCK HERE (IMPORTANT)
+    // ✅ STATUS CALCULATION
     const updatedClasses = classes.map(c => {
       const start = new Date(c.startTime);
 
@@ -287,10 +491,10 @@ export const getClasses = async (req, res) => {
       };
     });
 
-    // ✅ RETURN UPDATED DATA
     res.json(updatedClasses);
 
   } catch (error) {
+    console.error("Get Classes Error:", error);
     res.status(500).json({ message: error.message });
   }
 };

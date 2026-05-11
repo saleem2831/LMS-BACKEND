@@ -21,17 +21,35 @@ const courseSchema = new mongoose.Schema({
   },
 
   curriculumPdf: String, // S3 URL
-  image: String,         // NEW
+  curriculumInsPdf: String, // S3 URL
+
+  image: String,   
+  
+  trialEnabled: {
+  type: Boolean,
+  default: true
+},// NEW
 
   pricing: {
     oneToOne: Number,
-    batch: Number
+    batch: Number,
+    trial: Number
   },
+
 
   assignedInstructor: {
   type: mongoose.Schema.Types.ObjectId,
   ref: "User"
-}
+},
+
+assignedInstructors: [
+  {
+    type:
+      mongoose.Schema.Types.ObjectId,
+
+    ref: "User"
+  }
+],
 
 }, { timestamps: true });
 

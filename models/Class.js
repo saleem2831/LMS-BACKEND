@@ -46,10 +46,19 @@ const classSchema = new mongoose.Schema({
     ref: "Course"
   },
 
+
   instructorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
+
+    students: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  }
+],
+
 
   batchId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -60,6 +69,7 @@ const classSchema = new mongoose.Schema({
   endTime: Date,
 
   meetLink: String,
+  description: String,
 
   status: {
   type: String,
