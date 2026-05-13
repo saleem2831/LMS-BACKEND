@@ -173,6 +173,8 @@ import { demoScheduledTemplate } from "../email-templates/demoScheduledTemplate.
 
 export const scheduleDemo = async (req, res) => {
 
+
+
   try {
 
     const {
@@ -213,6 +215,10 @@ export const scheduleDemo = async (req, res) => {
       });
     }
 
+    // convert IST → UTC
+const istDate = new Date(scheduledTime);
+const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
+
     const demo = await Demo.create({
 
       trialEnrollmentId,
@@ -223,7 +229,7 @@ export const scheduleDemo = async (req, res) => {
 
       instructorId,
 
-      scheduledTime,
+      scheduledTime: utcDate, // ✅ fixed
 
       meetLink,
 
