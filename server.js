@@ -49,9 +49,9 @@ app.use(express.json());
 
 app.use(cors({
   origin: [
-    "http://localhost:5173",
-    "https://lms-frontend-rho-nine.vercel.app",
-    "https://skillstek.in/"
+    // "http://localhost:5173",
+    "https://skillstek.in/",
+    "https://www.skillstek.in/"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
